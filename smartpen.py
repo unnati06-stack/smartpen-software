@@ -1,8 +1,11 @@
 import cv2
 import pytesseract
 from PIL import Image
-from PyDictionary import PyDictionary
-import requests as req
+import cohere 
+
+
+
+
 
 # Step 1: Open webcam and capture image on pressing SPACE
 cam = cv2.VideoCapture(0)
@@ -25,20 +28,30 @@ while True:
 cam.release()
 cv2.destroyAllWindows()
 
+
 # Step 2: OCR - extract word from captured image
 image = Image.open("captured.png")
-word = pytesseract.image_to_string(image, config="--psm 8").strip().lower()
-print(f"Detected Word: {word}")
+sentence = pytesseract.image_to_string(image, config="--psm 11").strip().lower()
+print(f"Detected sentence: {sentence}")
 
-# Step 3: Get meaning from dictionary
-url=f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
 
-response=req.get(url)
-print(response.json())
 
-meaning=response.json()[0]['meanings'][0]['definitions'][0]['definition']
-print("\n word :", word)
-print("meaning :", meaning)
+#step 03: get meaning using cohere api
+co = cohere.Client("your key here")
 
-if response.status_code !=200:
-  print("word not found")
+prompt = f'''You are an assistant that explains sentences literally.
+
+Sentence: "{sentence}"
+
+Instructions:
+-give the literal meaning of the sentence in a simple way
+- Keep it simple and clear
+- Also repeat the original sentence'''
+
+response = co.chat(
+    model="command-a-03-2025",
+    message=prompt
+)
+
+print(response.text)
+ 
